@@ -1,5 +1,7 @@
 from . import main
+from flask import render_template ,redirect, url_for
+
 
 @main.route('/', methods=['GET','POST'])
 def index():
-	return 'this is index webiste!'
+	return render_template('index.html')
