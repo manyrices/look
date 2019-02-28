@@ -1,10 +1,12 @@
 from . import auth
 from .. import db
 from ..models import User
-from .forms import LoginForm, RegistrationForm
+from .forms import LoginForm, RegistrationForm, ChangePasswordForm, ChangeEmailForm, \
+	PasswordResetRequestForm, PasswordResetForm
 from flask import render_template, request, url_for, redirect, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from ..email import send_email 
+
 
 #未邮件确认页面
 @auth.route('/unconfirmed')
@@ -73,3 +75,9 @@ def resend_confirmation():
 	send_email(current_user.email, 'Confirm your account', '/auth/email/confirm',user=current_user,token=token)
 	flash('A confirmation email has been sent to you by email.')
 	return redirect(url_for('main.index'))
+
+#忘记密码&发送重置密码邮件
+@auth.route('/reset', methods=['GET','POST'])
+def password_reset_request():
+	
+
