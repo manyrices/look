@@ -3,7 +3,7 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
-	SECRET_KEY = os.urandom(24)
+	SECRET_KEY = os.environ.get('SECRET_KEY',os.urandom(24))
 	SQLALCHEMY_TRACK_MODIFICATIONS = False
 	MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.163.com')
 	MAIL_PORT = int(os.environ.get('MAIL_PORT', '25'))

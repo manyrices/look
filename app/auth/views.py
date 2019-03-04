@@ -76,8 +76,33 @@ def resend_confirmation():
 	flash('A confirmation email has been sent to you by email.')
 	return redirect(url_for('main.index'))
 
-#忘记密码&发送重置密码邮件
+#忘记密码&发送重置密码页面邮件
 @auth.route('/reset', methods=['GET','POST'])
 def password_reset_request():
-	
+	if not current_user.is_anonymous:
+		return redirect(url_for('main.index'))
+	form = PasswordResetRequestForm()
+	if form.validate_on_submit():
+		user = User.query.filter_by(email=form.email.data).first()
+		if user:
+			token = user.generate_reset_token()
+			send_email(user.email, 'Reset your password', 'auth/email/reset_password',
+			 user=user, token=token, next=request.args.get('next'))
+		flash('An email with instructions to reset your password has been send to you.')
+		return redirect(url_for('auth.login'))
+	return render_template('auth/reset_password.html', form=form)
 
+#重置密码页面
+@auth.route('/reset/<token>',methods=['GET','POST'])
+def password_reset(token):
+	if not current_user.is_anonymous:
+		return redirect(url_for('main.index'))
+	form = PasswordResetForm()
+	if form.validate_on_submit():
+		if User.reset_password(token, form.password.data):
+			db.session.commit()
+			flash('Your password has been updated.')
+			return redirect(url_for('auth.login'))
+		else:
+			return redirect(url_for('main.index'))
+	return render_template('auth/reset_password.html', form=form)
