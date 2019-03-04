@@ -9,7 +9,7 @@ class Config:
 	MAIL_PORT = int(os.environ.get('MAIL_PORT', '25'))
 	MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
 	MAIL_USERNAME = os.environ.get('MAIL_USERNAME','look_everything@163.com')
-	MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD','qwer1234')
+	MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD','******')
 	LOOK_MAIL_SUBJECT_PREFIX = '[Rice]'
 	LOOK_MAIL_SENDER = 'see see <look_everything@163.com>'
 
