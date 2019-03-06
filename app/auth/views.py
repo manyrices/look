@@ -1,9 +1,10 @@
 from . import auth
 from .. import db
+from ..helper import random_string
 from ..models import User
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm, ChangeEmailForm, \
 	PasswordResetRequestForm, PasswordResetForm
-from flask import render_template, request, url_for, redirect, flash
+from flask import render_template, request, url_for, redirect, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from ..email import send_email 
 
@@ -76,33 +77,27 @@ def resend_confirmation():
 	flash('A confirmation email has been sent to you by email.')
 	return redirect(url_for('main.index'))
 
-#忘记密码&发送重置密码页面邮件
+#找回密码&填写邮箱
 @auth.route('/reset', methods=['GET','POST'])
 def password_reset_request():
-	if not current_user.is_anonymous:
-		return redirect(url_for('main.index'))
+	# if not current_user.is_anonymous:
+	# 	return redirect(url_for('main.index'))
 	form = PasswordResetRequestForm()
-	if form.validate_on_submit():
-		user = User.query.filter_by(email=form.email.data).first()
-		if user:
-			token = user.generate_reset_token()
-			send_email(user.email, 'Reset your password', 'auth/email/reset_password',
-			 user=user, token=token, next=request.args.get('next'))
-		flash('An email with instructions to reset your password has been send to you.')
-		return redirect(url_for('auth.login'))
+	# if form.validate_on_submit():
+	# 	user = User.query.filter_by(email=form.email.data).first()
+	# 	if user:
+	# 		token = random_string(6)
+	# 		send_email(user.email, 'Reset your password', 'auth/email/reset_password', token=token)
+	# 	flash('An email with instructions to reset your password has been send to you.')
+	# 	return redirect(url_for('auth.login'))
 	return render_template('auth/reset_password.html', form=form)
 
 #重置密码页面
-@auth.route('/reset/<token>',methods=['GET','POST'])
-def password_reset(token):
-	if not current_user.is_anonymous:
-		return redirect(url_for('main.index'))
-	form = PasswordResetForm()
-	if form.validate_on_submit():
-		if User.reset_password(token, form.password.data):
-			db.session.commit()
-			flash('Your password has been updated.')
-			return redirect(url_for('auth.login'))
-		else:
-			return redirect(url_for('main.index'))
-	return render_template('auth/reset_password.html', form=form)
+@auth.route('/send_code')
+def send_code():
+	email = request.args.get('email')
+	if email:
+		if User.query.filter_by(email=email).first():
+			code = random_string(6)
+			return jsonify(res=code)
+		return jsonify(res='fail')
