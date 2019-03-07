@@ -4,7 +4,7 @@ from ..helper import random_string
 from ..models import User
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm, ChangeEmailForm, \
 	PasswordResetRequestForm, PasswordResetForm
-from flask import render_template, request, url_for, redirect, flash, jsonify
+from flask import render_template, request, url_for, redirect, flash, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from ..email import send_email 
 
@@ -80,24 +80,29 @@ def resend_confirmation():
 #找回密码&填写邮箱
 @auth.route('/reset', methods=['GET','POST'])
 def password_reset_request():
-	# if not current_user.is_anonymous:
-	# 	return redirect(url_for('main.index'))
 	form = PasswordResetRequestForm()
-	# if form.validate_on_submit():
-	# 	user = User.query.filter_by(email=form.email.data).first()
-	# 	if user:
-	# 		token = random_string(6)
-	# 		send_email(user.email, 'Reset your password', 'auth/email/reset_password', token=token)
-	# 	flash('An email with instructions to reset your password has been send to you.')
-	# 	return redirect(url_for('auth.login'))
+	if form.validate_on_submit():
+		if form.reset_code.data == session['code']:
+			return redirect(url_for('auth.password_reset_request'))
+		flash('Wrong code or expired code.')
 	return render_template('auth/reset_password.html', form=form)
 
-#重置密码页面
+#生成&发送重置6位代码到用户邮箱
 @auth.route('/send_code')
 def send_code():
 	email = request.args.get('email')
+	user = User.query.filter_by(email=email).first()
 	if email:
-		if User.query.filter_by(email=email).first():
+		if user:
 			code = random_string(6)
-			return jsonify(res=code)
-		return jsonify(res='fail')
+			session['code'] = code
+			send_email(user.email, 'Reset youer password', 'auth/email/reset_password', user=user, code=code)
+			return jsonify(res=1)
+		return jsonify(res=0)
+
+@auth.route('/reset', methods=['GET','POST'])
+def password_reset():
+	form = PasswordResetForm()
+	if form.validate_on_submit():
+
+

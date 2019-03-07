@@ -1,4 +1,5 @@
 import os 
+from datetime import timedelta
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -12,6 +13,7 @@ class Config:
 	MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD','******')
 	LOOK_MAIL_SUBJECT_PREFIX = '[Rice]'
 	LOOK_MAIL_SENDER = 'see see <look_everything@163.com>'
+	PERMANENT_SESSION_LIFETIME = timedelta(seconds=1800)
 
 	@staticmethod
 	def init_app(app):
