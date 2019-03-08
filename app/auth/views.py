@@ -83,8 +83,8 @@ def password_reset_request():
 	form = PasswordResetRequestForm()
 	if form.validate_on_submit():
 		if form.reset_code.data == session['code']:
-			return redirect(url_for('auth.password_reset_request'))
-		flash('Wrong code or expired code.')
+			return redirect(url_for('auth.password_reset'))
+		flash('Wrong or expired code.')
 	return render_template('auth/reset_password.html', form=form)
 
 #生成&发送重置6位代码到用户邮箱
@@ -96,6 +96,7 @@ def send_code():
 		if user:
 			code = random_string(6)
 			session['code'] = code
+			session['username'] = user.username
 			send_email(user.email, 'Reset youer password', 'auth/email/reset_password', user=user, code=code)
 			return jsonify(res=1)
 		return jsonify(res=0)
