@@ -1,5 +1,8 @@
 {% extends "bootstrap/base.html" %}
-
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='base.css') }}">
+{% endblock %}
 {% block navbar %}
 
 <nav class="navbar navbar-default">
@@ -12,7 +15,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#">米饭</a>
+      <a class="navbar-brand" href="{{ url_for('main.index') }}">米饭</a>
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
@@ -40,23 +43,21 @@
         <button type="submit" class="btn btn-default">Submit</button>
       </form>
       <ul class="nav navbar-nav navbar-right">
+        <img class="baseAvatar" src="{{ url_for('static', filename='avatar/default_avatar.jpg')}}">
         {% if current_user.is_authenticated %}
-        <li><a href="#">{{ current_user.username }}</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ current_user.username }}<span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="#">user info</a></li>
+            <li><a href="{{ url_for('auth.change_email_request') }}">change email</a></li>            
+            <li><a href="{{ url_for('auth.change_password') }}">change password</a></li>
+          </ul>
+        </li>
         <li><a href="{{ url_for('auth.logout' )}}">Logout</a></li>
         {% else %}
         <li><a href="{{ url_for('auth.login') }}">Login</a></li>
         <li><a href="{{ url_for('auth.register') }}">Register</a></li>
         {% endif %}
-        <!-- <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
-          <ul class="dropdown-menu">
-            <li><a href="#">Action</a></li>
-            <li><a href="#">Another action</a></li>
-            <li><a href="#">Something else here</a></li>
-            <li role="separator" class="divider"></li>
-            <li><a href="#">Separated link</a></li>
-          </ul>
-        </li> -->
       </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->

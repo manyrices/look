@@ -11,8 +11,8 @@ class User(db.Model, UserMixin):
 	id = db.Column(db.Integer, primary_key=True)
 	email = db.Column(db.String(64), unique=True, index=True)
 	username = db.Column(db.String(64), unique=True)
-	confirmed = db.Column(db.Boolean, default=False)
 	password_hash = db.Column(db.String(128))
+	confirmed = db.Column(db.Boolean, default=False)
 	@property
 	def password(self):
 		raise AttributeError('password is not a readable attribute')
@@ -39,13 +39,35 @@ class User(db.Model, UserMixin):
 		db.session.add(self)
 		return True
 
-	# def generate_reset_code(self, expiration=3600):
-	# 	s = Serializer(current_app.config['SECRET_KEY'], expiration)
-	# 	return s.dumps({'reset':self.id}).decode('utf-8')
+	def generate_reset_token(self, expiration=3600):
+		s = Serializer(current_app.config['SECRET_KEY'], expiration)
+		return s.dumps({'reset':self.id}).decode('utf-8')
+
+	def generate_change_email_token(self, email, expiration=3600):
+		s = Serializer(current_app.config['SECRET_KEY'], expiration)
+		return s.dumps({'email':email,'change_email_id':self.id}).decode('utf-8')
+
+	def change_email(self, token):
+		s = Serializer(current_app.config['SECRET_KEY'])
+		try:
+			data = s.loads(token.encode('utf-8'))
+		except:
+			return False
+		if data.get('change_email_id') != self.id:
+			return False
+		new_email = data.get('email')
+		if new_email is None:
+			return False
+		if self.query.filter_by(email=new_email).first():
+			return False
+
+		self.email = new_email
+		db.session.add(self)
+		return True
 
 	@staticmethod
 	def reset_password(token, new_password):
-		s = Serializer(token, current_app.config['SECRET_KEY'])
+		s = Serializer(current_app.config['SECRET_KEY'])
 		try:
 			data = s.loads(token.encode('utf-8'))
 		except:

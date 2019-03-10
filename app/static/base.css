@@ -1,0 +1,7 @@
+.baseAvatar {
+	border-radius: 50%;
+	height: 50px; 
+	width: 50px;
+	padding:5px;
+	float: left;
+}
