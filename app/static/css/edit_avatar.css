@@ -1,0 +1,61 @@
+
+.cropper-img{
+	height: 310px;
+}
+
+.img-main{
+	width: 400px;
+}
+
+.img-container{
+	height: 300px;
+	width: 300px;
+	float: left;
+}
+
+.preview{
+	height: 300px;
+	margin-left: 10px;
+	float: left;
+}
+
+.preview span{
+	display: block;
+	padding-top: 5px;
+	font-size: 12px;
+}
+.img-preview{
+	margin: 30px 0 5px 0;
+	overflow: hidden;
+	border-radius: 50%;
+}
+.tools{
+	margin-left: 4px;
+}
+
+.cropper-files{
+	margin-top: 4px;
+}
+
+.file {
+    position: relative;
+    display: inline-block;
+    background: #ccc;
+    border: 1px solid #333;
+    padding: 4px 20px;
+    overflow: hidden;
+    text-decoration: none;
+    text-indent: 0;
+    line-height: 20px;
+    border-radius: 20px;
+    color: #333;
+    font-size: 13px;
+
+}
+.file input {
+    position: absolute;
+    font-size: 100px;
+    right: 0;
+    top: 0;
+    opacity: 0;
+}

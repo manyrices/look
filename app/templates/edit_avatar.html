@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Edit Avatar{% endblock %}
+
+{%block main%}
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/cropper.css')}}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/edit_avatar.css')}}">
+	<div class="cropper-img">
+		<div class="cropper-container" >
+			<div class="img-main">
+				<div class="img-container" >
+					<img src="{{ url_for('static',filename='avatar/default_avatar.jpg')}}" alt="Picture">
+				</div>
+				<div class="preview">
+					<h4>头像预览</h4>
+					<div class="img-preview preview-md" style="height: 80px; width: 80px; overflow: hidden;"></div><span>大头虾 80*80</span>
+					<div class="img-preview preview-sm" style="height: 50px; width: 50px; overflow: hidden;"></div><span>小头虾 50*50</span>
+				</div>			
+			</div>
+		</div>		
+	</div>
+	<div class="tools">
+		<div class="cropper-btn">
+			<button type="button" id="reset" class="btn btn-primary">reset</button>
+			<button type="button" id="zoomL" class="btn btn-primary">+</button>
+			<button type="button" id="zoomS" class="btn btn-primary">-</button>	
+			<button type="button" id="getblob" class="btn btn-danger">上传</button>
+		</div>
+		<div class="cropper-files">
+			<form enctype="multipart/form-data" id="filesform">
+				<a href="javascript:void(0);" class="file btn btn-primary">
+					选择文件<input type="file" id="inputImage" name="file" accept="image/*">
+				</a>
+				<span>[支持图片后缀: jpg,jpeg,png,bmp]</span>
+			</form>				
+		</div>
+	</div>
+{%endblock%}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript" src="{{ url_for('static',filename='js/cropper.js') }}"></script>
+<script type="text/javascript">
+	window.onload = function(){
+		var Cropper = window.Cropper;
+		var URL = window.URL;
+		var container = document.querySelector('.img-container');
+		var image = container.getElementsByTagName('img').item(0);
+		var options = {
+			aspectRatio : 1/1,
+			preview : '.img-preview',
+			viewMode : 2,
+
+		}
+		var cropper = new Cropper(image, options);
+		var originalImageURL = image.src;
+		var uploadedImageType = 'image/jpeg';
+		var uploadedImageName = 'cropped.jpg';
+		var download = document.getElementById('download');
+		var inputImage = document.getElementById('inputImage');
+		var uploadedImageURL;
+		$('#reset').on('click',function(){
+			cropper.reset();
+		})
+		$('#zoomL').on('click',function(){
+			cropper.zoom(0.1);
+		})
+		$('#zoomS').on('click',function(){
+			cropper.zoom(-0.1)
+		})
+		if (URL) {
+			inputImage.onchange = function(){
+				var files = this.files;
+				var file;
+				if (cropper && files && files.length){
+					file = files[0];
+					if (/^image\/\w+/.test(file.type)) {
+						uploadedImageType = file.type;
+						uploadedImageName = file.name;
+
+						if (uploadedImageURL) {
+							URL.revokeObjectURL(uploadedImageURL);
+						}
+
+						image.src = uploadedImageURL = URL.createObjectURL(file);
+						cropper.destroy();
+						cropper = new Cropper(image, options);
+						inputImage.value = null;
+					} else {
+						window.alert('Please choose an image file.');
+					}
+				}
+			};
+		} else {
+			inputImage.disabled = true;
+			inputImage.parentNode.className += ' disabled';
+		}
+/*		$('#getImage').on('click',function(){
+			var result = cropper.getCroppedCanvas(
+				{ maxWidth:1024,maxHeigth:768}
+			);
+			$('.cropper-cavans').html(result);
+			download.download = uploadedImageName;
+			download.href = result.toDataURL(uploadedImageType);
+
+		})*/
+
+		$('#getblob').on('click',function(){
+			cropper.getCroppedCanvas(
+				{ maxWidth:200,maxHeigth:200}
+			).toBlob(function(blob){
+				var formdata = new FormData('#filesform');
+				formdata.append('avatar',blob);
+				$.ajax({
+					type : 'POST',
+					url : '/upload_avatar',
+					data : formdata,
+					processData : false,
+					contentType : false,
+					success : function(data){
+						if (data.data == 1) {
+							alert('头像更新成功。')
+						} else {
+							alert('头像更新失败。')
+						}
+					}
+				});
+			},'image/jpeg');
+		})
+	
+	};
+</script>
+{% endblock %}

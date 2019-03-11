@@ -13,7 +13,8 @@ class Config:
 	MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD','******')
 	LOOK_MAIL_SUBJECT_PREFIX = '[Rice]'
 	LOOK_MAIL_SENDER = 'see see <look_everything@163.com>'
-	PERMANENT_SESSION_LIFETIME = timedelta(seconds=1800)
+	UPLOAD_FOLDER = basedir + '\\app\\static\\avatar'
+	ALLOWED_EXTENSIONS = set(['jpg','jpeg','png','bmp'])
 
 	@staticmethod
 	def init_app(app):
