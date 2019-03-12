@@ -15,7 +15,8 @@ class Config:
 	LOOK_MAIL_SENDER = 'see see <look_everything@163.com>'
 	UPLOAD_FOLDER = basedir + '\\app\\static\\avatar'
 	ALLOWED_EXTENSIONS = set(['jpg','jpeg','png','bmp'])
-
+	MAX_CONTENT_LENGTH = 5*1024*1024
+	
 	@staticmethod
 	def init_app(app):
 		pass

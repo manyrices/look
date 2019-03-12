@@ -13,6 +13,7 @@ class User(db.Model, UserMixin):
 	username = db.Column(db.String(64), unique=True)
 	password_hash = db.Column(db.String(128))
 	confirmed = db.Column(db.Boolean, default=False)
+	avatar = db.Column(db.String(128), unique=True, default='default_avatar.jpg')
 	@property
 	def password(self):
 		raise AttributeError('password is not a readable attribute')

@@ -6,6 +6,5 @@
 	<h2>hello! {{ current_user.username }}</h2>
 	{% else %}
 	<h2>hello! anonymous</h2>
-	<p><a href="{{ url_for('main.edit_avatar') }}">Edit Avatar</a></p>
 	{% endif %}
 {% endblock %}

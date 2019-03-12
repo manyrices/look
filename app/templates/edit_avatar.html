@@ -8,7 +8,7 @@
 		<div class="cropper-container" >
 			<div class="img-main">
 				<div class="img-container" >
-					<img src="{{ url_for('static',filename='avatar/default_avatar.jpg')}}" alt="Picture">
+					<img src="{{ url_for('static',filename='avatar/'+user.avatar )}}" alt="Picture">
 				</div>
 				<div class="preview">
 					<h4>头像预览</h4>
@@ -23,11 +23,11 @@
 			<button type="button" id="reset" class="btn btn-primary">reset</button>
 			<button type="button" id="zoomL" class="btn btn-primary">+</button>
 			<button type="button" id="zoomS" class="btn btn-primary">-</button>	
-			<button type="button" id="getblob" class="btn btn-danger">上传</button>
+			<button type="button" id="getblob" class="btn btn-success">上传</button>
 		</div>
 		<div class="cropper-files">
 			<form enctype="multipart/form-data" id="filesform">
-				<a href="javascript:void(0);" class="file btn btn-primary">
+				<a href="javascript:void(0);" class="file btn btn-danger" >
 					选择文件<input type="file" id="inputImage" name="file" accept="image/*">
 				</a>
 				<span>[支持图片后缀: jpg,jpeg,png,bmp]</span>
@@ -73,6 +73,9 @@
 				var file;
 				if (cropper && files && files.length){
 					file = files[0];
+					if (file.size > 5*1024*1024){
+						alert('file size must less than 5mb.');
+					}
 					if (/^image\/\w+/.test(file.type)) {
 						uploadedImageType = file.type;
 						uploadedImageName = file.name;
@@ -119,6 +122,7 @@
 					success : function(data){
 						if (data.data == 1) {
 							alert('头像更新成功。')
+							window.location.reload()
 						} else {
 							alert('头像更新失败。')
 						}
