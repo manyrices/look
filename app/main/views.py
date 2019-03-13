@@ -1,4 +1,5 @@
 import os
+from .forms import PostForm
 from . import main
 from .. import db
 from flask import render_template ,redirect, url_for, request, current_app, jsonify
@@ -7,7 +8,8 @@ from flask_login import current_user, login_required
 
 @main.route('/', methods=['GET','POST'])
 def index():
-	return render_template('index.html')
+	form = PostForm()
+	return render_template('index.html', form=form)
 
 #头像编辑页面
 @main.route('/edit_avatar', methods=['GET','POST'])
@@ -21,8 +23,7 @@ def edit_avatar():
 @login_required
 def upload_avatar():
 	file = request.files['avatar'].read()
-	#获取当前真实登录用户
-	user = current_user._get_current_object()
+	user = current_user._get_current_object() #获取当前真实登录用户
 	if user is None:
 		redirect(url_for('main.index'))
 	# cropper插件传输文件格式为二进制流，因此file文件类操作不能实现

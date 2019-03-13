@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
 {% block title %}index{% endblock %}
-{% block main %}
-	<h1>this is index website!</h1>
-	{% if current_user.is_authenticated %}
-	<h2>hello! {{ current_user.username }}</h2>
-	{% else %}
-	<h2>hello! anonymous</h2>
-	{% endif %}
-{% endblock %}
+
+{%block main%}
+{% if current_user.is_authenticated %}
+<h3>hello! {{current_user.username}}</h3>
+ {{ wtf.quick_form(form) }}
+{% endif %}
+{%endblock%}
