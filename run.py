@@ -3,8 +3,9 @@ from flask_migrate import Migrate
 
 app = create_app('default')
 migrate = Migrate(app, db)
-from app.models import User
+from app.models import User, Role, Post, Permission
 
 @app.shell_context_processor
 def make_shell_context():
-	return dict(db=db, User=User)
+	return dict(db=db, User=User, Role=Role,
+                Permission=Permission, Post=Post)

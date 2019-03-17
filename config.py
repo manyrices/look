@@ -16,6 +16,7 @@ class Config:
 	UPLOAD_FOLDER = basedir + '\\app\\static\\avatar'
 	ALLOWED_EXTENSIONS = set(['jpg','jpeg','png','bmp'])
 	MAX_CONTENT_LENGTH = 5*1024*1024
+	LOOK_ADMIN = 'manyrice0o0@gmail.com'
 	
 	@staticmethod
 	def init_app(app):

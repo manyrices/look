@@ -21,9 +21,14 @@ class User(db.Model, UserMixin):
 	username = db.Column(db.String(64), unique=True)
 	password_hash = db.Column(db.String(128))
 	confirmed = db.Column(db.Boolean, default=False)
-	avatar = db.Column(db.String(128), unique=True, default='default_avatar.jpg')
-	role_id = db.Column(db.Integer, ForeignKey='roles.id')
+	role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 	posts = db.relationship('Post', backref='author',lazy='dynamic')
+	#用户信息字段
+	avatar = db.Column(db.String(128), unique=True, default='default_avatar.jpg')
+	location = db.Column(db.String(64))
+	about_me = db.Column(db.Text())
+	member_since = db.Column(db.DateTime(), default=datetime.utcnow)
+	last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
 	
 	@property
 	def password(self):
@@ -91,6 +96,20 @@ class User(db.Model, UserMixin):
 		db.session.add(user)
 		return True
 
+	def __init__(self, **kwargs):
+		super(User, self).__init__(**kwargs)
+		if self.role is None:
+			if self.email == current_app.config['LOOK_ADMIN']:
+				self.role = Role.query.filter_by(name='Administrator').first()
+			if self.role is None:
+				self.role = Role.query.filter_by(default=True).first()
+				
+	#检查用户是否有指定的权限
+	def can(self, perm):
+		return self.role is not None and self.role.has_permission(perm)
+	def is_administrator(self):
+		return self.can(Permission.ADMIN)
+
 #角色类,赋予不同角色不同的功能
 class Role(db.Model):
 	__tablename__ = 'roles'
@@ -118,12 +137,12 @@ class Role(db.Model):
 		self.permissions = 0
 
 	@staticmethod
-	def insert_role():
+	def insert_roles():
 		roles = {
 			'User':[Permission.FOLLOW, Permission.COMMENT, Permission.WRITE],
 			'Moderator':[Permission.FOLLOW, Permission.COMMENT, Permission.WRITE, 
-						Permission.MODERATE]
-			'Admin':[Permission.FOLLOW, Permission.COMMENT, Permission.WRITE,
+						Permission.MODERATE],
+			'Administrator':[Permission.FOLLOW, Permission.COMMENT, Permission.WRITE,
 					 Permission.MODERATE, Permission.ADMIN],
 		}
 		default_role = 'User'
@@ -137,7 +156,7 @@ class Role(db.Model):
 			role.default = (role.name == default_role)
 			db.session.add(role)
 		db.session.commit()
-		
+
 #文章类
 class Post(db.Model):
 	__tablename__ = 'posts'
@@ -147,7 +166,10 @@ class Post(db.Model):
 	author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 class AnonymousUser(AnonymousUserMixin):
-	pass
+	def can(self, permissions):
+		return False
+	def is_administrator(self):
+		return False
 
 
 @login_manager.user_loader
