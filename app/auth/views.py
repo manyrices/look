@@ -9,6 +9,16 @@ from flask_login import login_user, logout_user, login_required, current_user
 from ..email import send_email 
 
 
+@auth.before_app_request
+def before_request():
+	if current_user.is_authenticated:
+		current_user.ping()
+		if not current_user.confirmed \
+			and request.endpoint \
+			and request.blueprint != 'auth' \
+			and request.endpoint != 'static':
+			return redirect(url_for('auth.unconfirmed'))
+
 #未邮件确认页面
 @auth.route('/unconfirmed')
 def unconfirmed():

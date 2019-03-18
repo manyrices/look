@@ -110,6 +110,12 @@ class User(db.Model, UserMixin):
 	def is_administrator(self):
 		return self.can(Permission.ADMIN)
 
+	#用于刷新用户最后的访问时间
+	def ping(self):
+		self.last_seen = datetime.utcnow()
+		db.session.add(self)
+		db.session.commit()
+
 #角色类,赋予不同角色不同的功能
 class Role(db.Model):
 	__tablename__ = 'roles'

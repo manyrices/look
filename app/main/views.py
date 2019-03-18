@@ -2,6 +2,7 @@ import os
 from .forms import PostForm
 from . import main
 from .. import db
+from ..models import User, Role, Post, Permission
 from flask import render_template ,redirect, url_for, request, current_app, jsonify
 from ..helper import random_string
 from flask_login import current_user, login_required
@@ -10,6 +11,12 @@ from flask_login import current_user, login_required
 def index():
 	form = PostForm()
 	return render_template('index.html', form=form)
+
+#用户资料页面
+@main.route('/user/<username>')
+def user(username):
+	user = User.query.filter_by(username=username).first_or_404
+	return render_template('user.html', user=user)
 
 #头像编辑页面
 @main.route('/edit_avatar', methods=['GET','POST'])
@@ -49,3 +56,4 @@ def upload_avatar():
 		db.session.commit()
 		return jsonify(data=1)
 	return jsonify(data=0)
+
