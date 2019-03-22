@@ -15,7 +15,7 @@ def index():
 #用户资料页面
 @main.route('/user/<username>')
 def user(username):
-	user = User.query.filter_by(username=username).first_or_404
+	user = User.query.filter_by(username=username).first_or_404()
 	return render_template('user.html', user=user)
 
 #头像编辑页面

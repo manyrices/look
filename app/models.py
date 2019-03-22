@@ -24,7 +24,7 @@ class User(db.Model, UserMixin):
 	role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 	posts = db.relationship('Post', backref='author',lazy='dynamic')
 	#用户信息字段
-	avatar = db.Column(db.String(128), unique=True, default='default_avatar.jpg')
+	avatar = db.Column(db.String(128), default='default_avatar.jpg')
 	location = db.Column(db.String(64))
 	about_me = db.Column(db.Text())
 	member_since = db.Column(db.DateTime(), default=datetime.utcnow)
