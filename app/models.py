@@ -25,8 +25,7 @@ class User(db.Model, UserMixin):
 	posts = db.relationship('Post', backref='author',lazy='dynamic')
 	#用户信息字段
 	avatar = db.Column(db.String(128), default='default_avatar.jpg')
-	location = db.Column(db.String(64))
-	about_me = db.Column(db.Text())
+	about_me = db.Column(db.Text(), default='The user is lazy, there is nothing left.')
 	member_since = db.Column(db.DateTime(), default=datetime.utcnow)
 	last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
 	

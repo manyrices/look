@@ -4,8 +4,19 @@
 {% block title %}index{% endblock %}
 
 {%block main%}
-{% if current_user.is_authenticated %}
-<h3>hello! {{current_user.username}}</h3>
- {{ wtf.quick_form(form) }}
-{% endif %}
+<div>
+	{% if current_user.can(Permission.WRITE) %}
+	{{ wtf.quick_form(form) }}
+	{% endif %}
+</div>
+{% include '_posts.html' %}
 {%endblock%}
+
+{% block scripts %}
+{{ super() }}
+<!-- <script type="text/javascript">
+	window.onload = function(){
+		$('#body').attr('wrap','hard');
+	}
+</script> -->
+{% endblock %}

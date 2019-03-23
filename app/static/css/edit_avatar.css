@@ -40,15 +40,15 @@
 .file {
     position: relative;
     display: inline-block;
-    background: #ccc;
-    border: 1px solid #333;
+    background: #d9534f;
+    border: 1px solid #d9534f;
     padding: 4px 20px;
     overflow: hidden;
     text-decoration: none;
     text-indent: 0;
     line-height: 20px;
     border-radius: 20px;
-    color: #333;
+    color: #fff;
     font-size: 13px;
 
 }

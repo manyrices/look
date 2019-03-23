@@ -23,12 +23,12 @@
 			<button type="button" id="reset" class="btn btn-primary">reset</button>
 			<button type="button" id="zoomL" class="btn btn-primary">+</button>
 			<button type="button" id="zoomS" class="btn btn-primary">-</button>	
-			<button type="button" id="getblob" class="btn btn-success">上传</button>
+			<button type="button" id="getblob" class="btn btn-success">更新头像</button>
 		</div>
 		<div class="cropper-files">
 			<form enctype="multipart/form-data" id="filesform">
 				<a href="javascript:void(0);" class="file btn btn-danger" >
-					选择文件<input type="file" id="inputImage" name="file" accept="image/*">
+					选择图片<input type="file" id="inputImage" name="file" accept="image/*">
 				</a>
 				<span>[支持图片后缀: jpg,jpeg,png,bmp]</span>
 			</form>				
@@ -39,6 +39,9 @@
 {% block scripts %}
 {{ super() }}
 <script type="text/javascript" src="{{ url_for('static',filename='js/cropper.js') }}"></script>
+<script type=text/javascript>
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+</script>
 <script type="text/javascript">
 	window.onload = function(){
 		var Cropper = window.Cropper;
@@ -115,7 +118,7 @@
 				formdata.append('avatar',blob);
 				$.ajax({
 					type : 'POST',
-					url : '/upload_avatar',
+					url : $SCRIPT_ROOT + '/upload_avatar',
 					data : formdata,
 					processData : false,
 					contentType : false,
