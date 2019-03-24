@@ -30,6 +30,13 @@ div.post-author {
 	padding-left: 50px;
     font-weight: bold;
 }
+div.post-content {
+    margin-left: 48px;
+    min-height: 48px;
+}
+div.post-footer {
+    text-align: right;
+}
 .post-body{
 	padding-left: 50px;
 }

@@ -18,8 +18,37 @@ def index():
 		db.session.add(post)
 		db.session.commit()
 		return redirect(url_for('.index'))
-	posts = Post.query.order_by(Post.timestamp.desc()).all()
-	return render_template('index.html', form=form, posts=posts)
+	#flask分页类的实现
+	page = request.args.get('page', 1, type=int)
+	pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
+		page, per_page=current_app.config['LOOK_POSTS_PER_PAGE'],
+		error_out=False)
+	posts = pagination.items
+	return render_template('index.html', form=form, posts=posts, pagination=pagination)
+
+#文章固定链接
+@main.route('/post/<int:id>')
+def post(id):
+	post = Post.query.get_or_404(id)
+	return render_template('post.html', posts=[post])
+
+#文章编辑
+@main.route('/edit/<int:id>', methods=['GET','POST'])
+@login_required
+def edit(id):
+	post = Post.query.get_or_404(id)
+	if current_user != post.author and \
+			not current_user.can(Permission.ADMIN):
+		abort(403)
+	form = PostForm()
+	if form.validate_on_submit():
+		post.body = form.body.data
+		db.session.add(post)
+		db.session.commit()
+		flash('Post has been updated.')
+	form.body.data = post.body
+	return render_template('edit_post.html', form=form)
+
 
 #用户资料页面
 @main.route('/user/<username>')

@@ -15,8 +15,9 @@ class Config:
 	LOOK_MAIL_SENDER = 'see see <look_everything@163.com>'
 	UPLOAD_FOLDER = basedir + '\\app\\static\\avatar'
 	ALLOWED_EXTENSIONS = set(['jpg','jpeg','png','bmp'])
-	MAX_CONTENT_LENGTH = 5*1024*1024
-	LOOK_ADMIN = 'manyrice0o0@gmail.com'
+	MAX_CONTENT_LENGTH = 5*1024*1024 #限制上传文件最大容量为5Mb
+	LOOK_ADMIN = 'manyrice0o0@gmail.com' #管理员账号
+	LOOK_POSTS_PER_PAGE = 20 #设定分页功能中，每一页显示的数目
 	
 	@staticmethod
 	def init_app(app):

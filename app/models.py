@@ -4,6 +4,8 @@ from . import db, login_manager
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, request, url_for
 from datetime import datetime
+from markdown import markdown
+import bleach
 
 #以二进制叠加方式判断一个用户拥有的权限
 class Permission:
@@ -167,8 +169,19 @@ class Post(db.Model):
 	__tablename__ = 'posts'
 	id = db.Column(db.Integer, primary_key=True)
 	body = db.Column(db.Text)
+	body_html = db.Column(db.Text) #用于富文本转换后缓存HTML代码
 	timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 	author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+	@staticmethod
+	def on_change_body(target, value, oldvalue, initiator):
+		allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
+						'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
+						'h1', 'h2', 'h3', 'p']
+		target.body_html = bleach.linkify(bleach.clean(
+			markdown(value, output_format='html'),
+			tags=allowed_tags, strip=True))
+		
+db.event.listen(Post.body, 'set', Post.on_change_body)
 
 class AnonymousUser(AnonymousUserMixin):
 	def can(self, permissions):

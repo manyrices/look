@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
 
 {% block title %}index{% endblock %}
 
@@ -10,13 +11,14 @@
 	{% endif %}
 </div>
 {% include '_posts.html' %}
+{% if pagination %}
+	<div class="pagination">
+		{{ macros.pagination_widget(pagination, '.index') }}
+	</div>
+{% endif %}
 {%endblock%}
 
 {% block scripts %}
 {{ super() }}
-<!-- <script type="text/javascript">
-	window.onload = function(){
-		$('#body').attr('wrap','hard');
-	}
-</script> -->
+{{ pagedown.include_pagedown() }}
 {% endblock %}
