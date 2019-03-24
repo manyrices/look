@@ -30,7 +30,34 @@ class User(db.Model, UserMixin):
 	about_me = db.Column(db.Text(), default='The user is lazy, there is nothing left.')
 	member_since = db.Column(db.DateTime(), default=datetime.utcnow)
 	last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
-	
+	#关注字段(自引用多对多关系实现)
+	followed = db.relationship('Follow',
+							   foreign_keys=[Follow.follower_id],
+							   backref=db.backref('follower', lazy='joined'),
+							   lazy='dynamic',
+							   cascade='all, delete-orphan')
+	followers = db.relationship('Follow',
+							   foreign_keys=[Follow.followed_id],
+							   backref=db.backref('followed', lazy='joined'),
+							   lazy='dynamic',
+							   cascade='all, delete-orphan')
+	def follow(self, user):
+		if not self.is_following(user):
+			f = Follow(follower=self, followed=user)
+			db.session.add(f)
+	def unfollow(self, user):
+		f = self.followed.filter_by(followed_id=user.id).first()
+		if f:
+			db.session.delete(f)
+	def is_following(self, user):
+		if user.id is None:
+			return False
+		return self.followed.filter_by(followed_id=user.id).first() is not None
+	def is_followed_by(self, user):
+		if user.id is None:
+			return False
+		return self.followers.filter_by(follower_id=user.id).first() is not None
+
 	@property
 	def password(self):
 		raise AttributeError('password is not a readable attribute')
@@ -116,6 +143,15 @@ class User(db.Model, UserMixin):
 		self.last_seen = datetime.utcnow()
 		db.session.add(self)
 		db.session.commit()
+
+#用户关注类(自引用关联)
+class Follow(db.Model):
+	__tablename__ = 'follows'
+	follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+							primary_key=True)
+	followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+							primary_key=True)
+	timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 #角色类,赋予不同角色不同的功能
 class Role(db.Model):
