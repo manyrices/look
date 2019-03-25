@@ -35,3 +35,7 @@ class EditProfileAdminForm(FlaskForm):
 		if field.data != self.username and \
 					User.query.filter_by(username=field.data).first():
 			raise ValidationError('Username already in use.')
+
+class CommentForm(FlaskForm):
+	body = StringField('', validators=[DataRequired()])
+	submit = SubmitField('Submit')

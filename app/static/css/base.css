@@ -1,4 +1,4 @@
-.baseAvatar {
+    .baseAvatar {
 	border-radius: 50%;
 	height: 50px; 
 	width: 50px;
@@ -9,6 +9,9 @@
     position: absolute;
     height: 40px;
     width: 40px;
+}
+div.post-tabs {
+    margin-top: 16px;
 }
 ul.posts {
     list-style-type: none;
@@ -37,8 +40,63 @@ div.post-content {
 div.post-footer {
     text-align: right;
 }
+
+ul.comments {
+    list-style-type: none;
+    padding: 0px;
+    margin: 16px 0px 0px 0px;
+}
+ul.comments li.comment {
+    margin-left: 32px;
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+ul.comments li.comment:nth-child(1) {
+    border-top: 1px solid #e0e0e0;
+}
+ul.comments li.comment:hover {
+    background-color: #f0f0f0;
+}
+div.comment-date {
+    float: right;
+}
+div.comment-author {
+    font-weight: bold;
+}
+.comment-avatar {
+    position: absolute;
+    height: 40px;
+    width: 40px;
+}
+div.comment-content {
+    margin-left: 48px;
+    min-height: 48px;
+}
+div.comment-form {
+    margin: 16px 0px 16px 32px;
+}
+div.pagination {
+    width: 100%;
+    text-align: right;
+    padding: 0px;
+    margin: 0px;
+}
+div.flask-pagedown-preview {
+    margin: 10px 0px 10px 0px;
+    border: 1px solid #e0e0e0;
+    padding: 4px;
+}
+div.flask-pagedown-preview h1 {
+    font-size: 140%;
+}
+div.flask-pagedown-preview h2 {
+    font-size: 130%;
+}
+div.flask-pagedown-preview h3 {
+    font-size: 120%;
+}
 .post-body{
-	padding-left: 50px;
+    padding-left: 50px;
 }
 .post-body h1 {
     font-size: 140%;
@@ -48,4 +106,7 @@ div.post-footer {
 }
 .post-body h3 {
     font-size: 120%;
+}
+.table.followers tr {
+    border-bottom: 1px solid #e0e0e0;
 }

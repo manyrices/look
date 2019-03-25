@@ -15,6 +15,15 @@ class Permission:
 	MODERATE = 8 #协管
 	ADMIN = 16 #管理员
 
+#用户关注类(自引用关联)
+class Follow(db.Model):
+	__tablename__ = 'follows'
+	follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+							primary_key=True)
+	followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
+							primary_key=True)
+	timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
 #用户类
 class User(db.Model, UserMixin):
 	__tablename__ = 'users'
@@ -25,6 +34,7 @@ class User(db.Model, UserMixin):
 	confirmed = db.Column(db.Boolean, default=False)
 	role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 	posts = db.relationship('Post', backref='author',lazy='dynamic')
+	comments = db.relationship('Comment', backref='author', lazy='dynamic')
 	#用户信息字段
 	avatar = db.Column(db.String(128), default='default_avatar.jpg')
 	about_me = db.Column(db.Text(), default='The user is lazy, there is nothing left.')
@@ -57,6 +67,12 @@ class User(db.Model, UserMixin):
 		if user.id is None:
 			return False
 		return self.followers.filter_by(follower_id=user.id).first() is not None
+
+	@property
+	def followed_posts(self):
+		return Post.query.join(Follow, Follow.followed_id == Post.author_id)\
+				.filter(Follow.follower_id == self.id)
+	
 
 	@property
 	def password(self):
@@ -126,6 +142,7 @@ class User(db.Model, UserMixin):
 
 	def __init__(self, **kwargs):
 		super(User, self).__init__(**kwargs)
+		self.follow(self)
 		if self.role is None:
 			if self.email == current_app.config['LOOK_ADMIN']:
 				self.role = Role.query.filter_by(name='Administrator').first()
@@ -143,15 +160,6 @@ class User(db.Model, UserMixin):
 		self.last_seen = datetime.utcnow()
 		db.session.add(self)
 		db.session.commit()
-
-#用户关注类(自引用关联)
-class Follow(db.Model):
-	__tablename__ = 'follows'
-	follower_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-							primary_key=True)
-	followed_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-							primary_key=True)
-	timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 #角色类,赋予不同角色不同的功能
 class Role(db.Model):
@@ -208,6 +216,7 @@ class Post(db.Model):
 	body_html = db.Column(db.Text) #用于富文本转换后缓存HTML代码
 	timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 	author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+	comments = db.relationship('Comment', backref='post', lazy='dynamic')
 	@staticmethod
 	def on_change_body(target, value, oldvalue, initiator):
 		allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
@@ -216,8 +225,29 @@ class Post(db.Model):
 		target.body_html = bleach.linkify(bleach.clean(
 			markdown(value, output_format='html'),
 			tags=allowed_tags, strip=True))
-		
+
 db.event.listen(Post.body, 'set', Post.on_change_body)
+
+#评论类
+class Comment(db.Model):
+	__tablename__ = 'comments'
+	id = db.Column(db.Integer, primary_key=True)
+	body = db.Column(db.Text)
+	body_html = db.Column(db.Text)
+	timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+	disable = db.Column(db.Boolean)
+	author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+	post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+
+	@staticmethod
+	def on_changed_body(target, value, oldvalue, initiator):
+		allowed_tags = ['a', 'abbr', 'acronym', 'b', 'code', 'em', 'i', 'strong']
+		target.body_html = bleach.linkify(bleach.clean(
+			markdown(value, output_format='html'),
+			tags=allowed_tags, strip=True))
+
+db.event.listen(Comment.body, 'set', Comment.on_changed_body)
+
 
 class AnonymousUser(AnonymousUserMixin):
 	def can(self, permissions):

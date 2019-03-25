@@ -7,6 +7,10 @@
 </div>
 <div>
  {{ wtf.quick_form(form) }}
+ {% if current_user.is_administrator %}
+ <p>---------------</p>
+ <a href="{{ url_for('.remove', id=post.id) }}" class="btn btn-danger">remove</a>
+ {% endif %}
 </div>
 {% endblock %}
 {% block scripts %}

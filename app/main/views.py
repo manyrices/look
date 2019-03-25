@@ -1,14 +1,14 @@
 import os
-from .forms import PostForm, EditProfileAdminForm
+from .forms import PostForm, EditProfileAdminForm, CommentForm
 from . import main
 from .. import db
-from ..models import User, Role, Post, Permission
-from flask import render_template ,redirect, url_for, request, current_app, jsonify, flash, abort
+from ..models import User, Role, Post, Permission, Comment
+from flask import render_template ,redirect, url_for, request, current_app, jsonify, flash, abort, make_response
 from ..helper import random_string
-from ..decorators import admin_required
+from ..decorators import admin_required, permission_required
 from flask_login import current_user, login_required
 
-#看看文章首页
+#首页(页面)
 @main.route('/', methods=['GET','POST'])
 def index():
 	form = PostForm()
@@ -20,19 +20,44 @@ def index():
 		return redirect(url_for('.index'))
 	#flask分页类的实现
 	page = request.args.get('page', 1, type=int)
-	pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
-		page, per_page=current_app.config['LOOK_POSTS_PER_PAGE'],
-		error_out=False)
+	show_followed = False
+	if current_user.is_authenticated:
+		show_followed = bool(request.cookies.get('show_followed', ''))
+	if show_followed:
+		query = current_user.followed_posts
+	else:
+		query = Post.query
+	pagination = query.order_by(Post.timestamp.desc()).paginate(
+					page, per_page=current_app.config['LOOK_POSTS_PER_PAGE'],
+					error_out=False)
 	posts = pagination.items
-	return render_template('index.html', form=form, posts=posts, pagination=pagination)
+	return render_template('index.html', form=form, posts=posts, 
+					show_followed=show_followed, pagination=pagination)
 
-#文章固定链接
-@main.route('/post/<int:id>')
+#文章(页面)
+@main.route('/post/<int:id>', methods=['GET','POST'])
 def post(id):
 	post = Post.query.get_or_404(id)
-	return render_template('post.html', posts=[post])
+	form = CommentForm()
+	if form.validate_on_submit():
+		comment = Comment(body=form.body.data,
+						  post=post,
+						  author=current_user._get_current_object())
+		db.session.add(comment)
+		db.session.commit()
+		return redirect(url_for('.post', id=post.id, page=-1)) #-1用于请求评论最后一页
+	page = request.args.get('page', 1, type=int)
+	if page == -1:
+		page = (post.comments.count() - 1) // \
+				current_app.config['LOOK_POSTS_PER_PAGE'] + 1
+	pagination = post.comments.order_by(Comment.timestamp.asc()).paginate(
+		page, per_page=current_app.config['LOOK_POSTS_PER_PAGE'],
+		error_out=False)
+	comments = pagination.items
+	return render_template('post.html', posts=[post], form=form,
+							comments=comments, pagination=pagination)
 
-#文章编辑
+#文章编辑(页面)
 @main.route('/edit/<int:id>', methods=['GET','POST'])
 @login_required
 def edit(id):
@@ -47,10 +72,25 @@ def edit(id):
 		db.session.commit()
 		flash('Post has been updated.')
 	form.body.data = post.body
-	return render_template('edit_post.html', form=form)
+	return render_template('edit_post.html', form=form, post=post)
 
+#文章删除(功能)
+@main.route('/remove/<int:id>')
+@login_required
+@admin_required
+def remove(id):
+	post = Post.query.filter_by(id=id).first()
+	if post is None:
+		flash('Post does not exist.')
+		return redirect(url_for('.index'))
+	if not current_user.can(Permission.ADMIN):
+		flash('You has not permission to delete the post.')
+		return redirect(url_for('.index'))
+	db.session.delete(post)
+	db.session.commit()
+	return redirect(url_for('.index'))
 
-#用户资料页面
+#用户资料(页面)
 @main.route('/user/<username>')
 def user(username):
 	user = User.query.filter_by(username=username).first()
@@ -59,7 +99,7 @@ def user(username):
 	posts = user.posts.order_by(Post.timestamp.desc()).all()
 	return render_template('user.html', user=user, posts=posts)
 
-#用户个性描述编辑
+#用户个性描述编辑(功能)
 @main.route('/upload_aboutme')
 @login_required
 def upload_aboutme():
@@ -74,14 +114,14 @@ def upload_aboutme():
 		return jsonify(data=1)
 	return jsonify(data=0)
 
-#头像编辑页面
+#头像编辑(页面)
 @main.route('/edit_avatar', methods=['GET','POST'])
 @login_required
 def edit_avatar():
 	user = current_user._get_current_object()
 	return render_template('/edit_avatar.html', user=user)
 
-#用户头像上传与编辑
+#用户头像上传与编辑(功能)
 @main.route('/upload_avatar', methods=['POST'])
 @login_required
 def upload_avatar():
@@ -113,7 +153,7 @@ def upload_avatar():
 		return jsonify(data=1)
 	return jsonify(data=0)
 
-#管理员编辑用户资料
+#管理员编辑用户资料(页面)
 @main.route('/edit-profile/<int:id>', methods=['GET','POST'])
 @login_required
 @admin_required
@@ -137,3 +177,84 @@ def edit_profile_admin(id):
 	form.confirmed.data = user.confirmed
 	form.about_me.data = user.about_me
 	return render_template('edit_profile.html', form=form, user=user)
+
+#关注用户(功能)
+@main.route('/follow/<username>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def follow(username):
+	user = User.query.filter_by(username=username).first()
+	if user is None:
+		flash('Invalid user.')
+		return redirect(url_for('.index'))
+	if current_user.is_following(user):
+		# flash('You are already following this user.')
+		return redirect(url_for('.user', username=username))
+	current_user.follow(user)
+	db.session.commit()
+	flash('You are now following %s' % username)
+	return redirect(url_for('.user', username=username))
+#取消关注(功能)
+@main.route('/unfollow/<username>')
+@login_required
+@permission_required(Permission.FOLLOW)
+def unfollow(username):
+	user = User.query.filter_by(username=username).first()
+	if user is None:
+		flash('Invalid user')
+		return redirect(url_for('.index'))
+	if not current_user.is_following(user):
+		# flash('You are not following this user.')
+		return redirect(url_for('.user', username=username))
+	current_user.unfollow(user)
+	db.session.commit()
+	flash('You are not following this user.')
+	return redirect(url_for('.user', username=username))
+
+#显示关注用户列表(页面)
+@main.route('/followers/<username>')
+def followers(username):
+	user = User.query.filter_by(username=username).first()
+	if user is None:
+		flash('Invalid user.')
+		return redirect(url_for('.index'))
+	page = request.args.get('page', 1, type=int)
+	pagination = user.followers.paginate(
+		page, per_page=current_app.config['LOOK_POSTS_PER_PAGE'],
+		error_out=False)
+	follows = [{'user':item.follower, 'timestamp':item.timestamp} \
+			   for item in pagination.items]
+	return render_template('followers.html', user=user, title='Followers of',
+							endpoint='.followers', pagination=pagination,
+							follows=follows)
+
+#显示被关注用户列表(页面)
+@main.route('/followed_by/<username>')
+def followed_by(username):
+	user = User.query.filter_by(username=username).first()
+	if user is None:
+		flash('Invalid user.')
+		return redirect(url_for('.index'))
+	page = request.args.get('page', 1, type=int)
+	pagination = user.followed.paginate(
+		page, per_page=current_app.config['LOOK_POSTS_PER_PAGE'],
+		error_out=False)
+	follows = [{'user':item.followed, 'timestamp':item.timestamp} \
+				for item in pagination.items]
+	return render_template('followers.html', user=user, title='Followed by',
+							endpoint='.followers', pagination=pagination,
+							follows=follows)
+
+#显示所有文章or关注着的文章(标签)
+@main.route('/all')
+@login_required
+def show_all():
+	resp = make_response(redirect(url_for('.index')))
+	resp.set_cookie('show_followed', '', max_age=30*24*60) #30天
+	return resp
+@main.route('/followed')
+@login_required
+def show_followed():
+	resp = make_response(redirect(url_for('.index')))
+	resp.set_cookie('show_followed', '1', max_age=30*24*60 )
+	return resp
