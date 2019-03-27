@@ -29,15 +29,15 @@
 				 </span>
 			</a>
 			{% if current_user.is_administrator() %}
-			<a href="{{ url_for('.edit', id=post.id) }}">
+			<a href="{{ url_for('.edit', id=post.id) }}" style="padding-left: 3px;">
 				<span class="label label-default">Edit[admin]</span>
 			</a>
 			<a href="{{ url_for('.remove', id=post.id) }}">
 				<span class="label label-danger">remove</span>
 			</a>
 			{% elif current_user == post.author %}
-			<a href="{{ url_for('.edit', id=post.id) }}">
-				<span class="label label-default">Edit</span>
+			<a href="{{ url_for('.edit', id=post.id) }}" style="padding-left: 3px;">
+				<span class="label label-success">Edit</span>
 			</a>
 			{% endif %}
 		</div>

@@ -1,5 +1,6 @@
 import os
 from .forms import PostForm, EditProfileAdminForm, CommentForm
+from sqlalchemy.exc import IntegrityError
 from . import main
 from .. import db
 from ..models import User, Role, Post, Permission, Comment
@@ -86,8 +87,13 @@ def remove(id):
 	if not current_user.can(Permission.ADMIN):
 		flash('You has not permission to delete the post.')
 		return redirect(url_for('.index'))
-	db.session.delete(post)
-	db.session.commit()
+	try:
+		Comment.query.filter_by(post_id=id).delete()
+		db.session.delete(post)
+		db.session.commit()
+	except IntegrityError:
+		db.session.rollback()
+
 	return redirect(url_for('.index'))
 
 #用户资料(页面)
@@ -178,6 +184,41 @@ def edit_profile_admin(id):
 	form.about_me.data = user.about_me
 	return render_template('edit_profile.html', form=form, user=user)
 
+#协管管理用户评论(页面)
+@main.route('/moderate')
+@login_required
+@permission_required(Permission.MODERATE)
+def moderate():
+	page = request.args.get('page', 1, type=int)
+	pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(
+		page, per_page=current_app.config['LOOK_POSTS_PER_PAGE'],
+		error_out=False)
+	comments = pagination.items
+	return render_template('moderate.html', comments=comments, pagination=pagination,
+		page=page)
+#协管员禁用/启用评论(功能)
+@main.route('/moderate/enable/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE)
+def moderate_enable(id):
+	comment = Comment.query.get_or_404(id)
+	comment.disabled = False
+	db.session.add(comment)
+	db.session.commit()
+	return redirect(url_for('.moderate', 
+		page=request.args.get('page', 1, type=int)))
+
+@main.route('/moderate/disable/<int:id>')
+@login_required
+@permission_required(Permission.MODERATE)
+def moderate_disable(id):
+	comment = Comment.query.get_or_404(id)
+	comment.disabled = True
+	db.session.add(comment)
+	db.session.commit()
+	return redirect(url_for('.moderate', 
+		page=request.args.get('page', 1, type=int)))	
+
 #关注用户(功能)
 @main.route('/follow/<username>')
 @login_required
@@ -245,7 +286,7 @@ def followed_by(username):
 							endpoint='.followers', pagination=pagination,
 							follows=follows)
 
-#显示所有文章or关注着的文章(标签)
+#首页显示所有文章or关注着的文章(标签)
 @main.route('/all')
 @login_required
 def show_all():
