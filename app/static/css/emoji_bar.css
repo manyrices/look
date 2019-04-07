@@ -1,0 +1,36 @@
+#emojiTable{
+	margin-top: 22px;
+	position: absolute;
+	background: #fff;
+	border-collapse: collapse;
+	height: 20px;
+	overflow-y: scroll;
+
+}
+#emojiTable td{
+	border: 1px solid #dcdcdc;
+	cursor: pointer;
+	width: 28px;
+	height: 28px;
+	text-align: center;
+
+}
+#emojiTable td:hover{
+	background-color: #e3e3e3;
+}
+#emojiTable tbody{
+	display: block;
+	height: 150px;
+	overflow-y: scroll;
+}
+#emojiBtn{
+	float: left;
+	background-color: #fff;
+	border: none;
+}
+#emojiBtn:hover{
+	background-color: #ccc;
+}
+textarea{
+	display: block;
+}

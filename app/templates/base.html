@@ -2,6 +2,7 @@
 {% block head %}
 {{ super() }}
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/base.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/emoji_bar.css') }}">
 {% endblock %}
 {% block navbar %}
 
@@ -84,5 +85,9 @@
 
 {%block scripts%}
 {{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='js/emoji_bar.js') }}"></script>
+<script type="text/javascript">
+  $('#flask-pagedown-body').addEmoji()
+</script>
 {{ moment.include_moment() }}
 {%endblock%}

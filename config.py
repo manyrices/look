@@ -31,7 +31,7 @@ class DevelopmentConfig(Config):
 	DATABASE = 'developlook'
 	USERNAME = 'root'
 	PASSWORD = 'lanwenbin'
-	SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8'. \
+	SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8mb4'. \
 							format(USERNAME,PASSWORD,HOST,PORT,DATABASE)
 
 class TestingConfig(Config):

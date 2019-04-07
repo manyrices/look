@@ -20,3 +20,11 @@
 </div>
 {% endif %}
 {% endblock %}
+
+{%block scripts%}
+{{ super() }}
+<script type="text/javascript" src="{{ url_for('static', filename='js/emoji_bar.js') }}"></script>
+<script type="text/javascript">
+  $('#body').addEmoji()
+</script>
+{%endblock%}
