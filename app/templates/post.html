@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 {% import "_macros.html" as macros %}
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/post.css') }}">
+{% endblock %}
 
 {% block title %}Post{% endblock %}
 
@@ -11,6 +15,8 @@
 {% if current_user.can(Permission.COMMENT) %}
 <div class="comment-form">
     {{ wtf.quick_form(form) }}
+</div>
+<div id="isolation">
 </div>
 {% endif %}
 {% include '_comments.html' %}

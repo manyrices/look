@@ -9,8 +9,9 @@
 		this.each(function(){
 			var area = $(this);
 			var btn = $('<input type="button" value="😃" id="emojiBtn">');
-			area.after(btn);
-			btn.after(createTable());
+			var tab = createTable();
+			area.after(tab);
+			tab.after(btn);
 			$('td').click(function(){
 				insertAtCursor(area, $(this).text())
 			});

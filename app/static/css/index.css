@@ -1,10 +1,8 @@
 #emojiTable{
-	margin-top: 22px;
+	margin-top: 80px;
 	position: absolute;
 	background: #fff;
 	border-collapse: collapse;
-	height: 20px;
-	overflow-y: scroll;
 
 }
 #emojiTable td{
@@ -24,13 +22,24 @@
 	overflow-y: scroll;
 }
 #emojiBtn{
+	position: absolute;
+	margin-top: 240px;
 	float: left;
 	background-color: #fff;
-	border: none;
+	border: 1px solid #9e9e9e;
+	border-radius: 10%;
 }
 #emojiBtn:hover{
 	background-color: #ccc;
 }
-textarea{
-	display: block;
+#flask-pagedown-body{
+	position: absolute;
+	width: 400px;
+	height: 236px;
+}
+#flask-pagedown-body-preview{
+	display: none;
+}
+#submit{
+	margin-top: 260px;
 }
