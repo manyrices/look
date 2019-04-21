@@ -18,6 +18,7 @@ class Config:
 	MAX_CONTENT_LENGTH = 5*1024*1024 #限制上传文件最大容量为5Mb
 	LOOK_ADMIN = 'manyrice0o0@gmail.com' #管理员账号
 	LOOK_POSTS_PER_PAGE = 20 #设定分页功能中，每一页显示的数目
+	LOOK_COMMENTS_PER_PAGE = 30
 	
 	@staticmethod
 	def init_app(app):

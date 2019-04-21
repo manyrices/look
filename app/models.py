@@ -6,6 +6,8 @@ from flask import current_app, request, url_for
 from datetime import datetime
 from markdown import markdown
 import bleach
+from app.exceptions import ValidationError
+
 
 #以二进制叠加方式判断一个用户拥有的权限
 class Permission:
@@ -41,11 +43,13 @@ class User(db.Model, UserMixin):
 	member_since = db.Column(db.DateTime(), default=datetime.utcnow)
 	last_seen = db.Column(db.DateTime(), default=datetime.utcnow)
 	#关注字段(自引用多对多关系实现)
+	#self--->user
 	followed = db.relationship('Follow',
 							   foreign_keys=[Follow.follower_id],
 							   backref=db.backref('follower', lazy='joined'),
 							   lazy='dynamic',
 							   cascade='all, delete-orphan')
+	#user--->self
 	followers = db.relationship('Follow',
 							   foreign_keys=[Follow.followed_id],
 							   backref=db.backref('followed', lazy='joined'),
@@ -140,6 +144,37 @@ class User(db.Model, UserMixin):
 		db.session.add(user)
 		return True
 
+	#------------api-------------
+
+	def to_json(self):
+		json_user = {
+			'url': url_for('api.get_user', id=self.id),
+			'username': self.username,
+			'avatar': self.avatar,
+			'member_since': self.member_since,
+			'last_seen': self.last_seen,
+			'posts_url': url_for('api.get_user_posts', id=self.id),
+			'followed_posts_url': url_for('api.get_user_followed_posts', 
+										id=self.id),
+			'post_count': self.posts.count()
+		}
+		return json_user
+
+	def generate_auth_token(self, expiration):
+		s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+		return s.dumps({'id': self.id}).decode('utf-8')
+
+	@staticmethod
+	def verify_auth_token(token):
+		s = Serializer(current_app.config['SECRET_KEY'])
+		try:
+			data = s.loads(token)
+		except:
+			return None
+		return User.query.get(data['id'])
+	
+	#------------endapi-------------	
+
 	def __init__(self, **kwargs):
 		super(User, self).__init__(**kwargs)
 		self.follow(self)
@@ -148,7 +183,7 @@ class User(db.Model, UserMixin):
 				self.role = Role.query.filter_by(name='Administrator').first()
 			if self.role is None:
 				self.role = Role.query.filter_by(default=True).first()
-				
+
 	#检查用户是否有指定的权限
 	def can(self, perm):
 		return self.role is not None and self.role.has_permission(perm)
@@ -217,6 +252,30 @@ class Post(db.Model):
 	timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 	author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 	comments = db.relationship('Comment', backref='post', lazy='dynamic')
+
+	#---------------api---------------
+
+	def to_json(self):
+		json_post = {
+			'url': url_for('api.get_post', id=self.id),
+			'body': self.body,
+			'body_html': self.body_html,
+			'timestamp': self.timestamp,
+			'author_url': url_for('api.get_user', id=self.author_id),
+			'comments_url': url_for('api.get_post_comments', id=self.id),
+			'comment_count': self.comments.count()	
+		}
+		return json_post
+
+	@staticmethod
+	def from_json(json_post):
+		body = json_post.get('body')
+		if body is None or body == '':
+			raise ValidationError('post does not have a body')
+		return Post(body=body)
+
+	#--------------endapi---------------
+
 	@staticmethod
 	def on_change_body(target, value, oldvalue, initiator):
 		allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
@@ -238,6 +297,29 @@ class Comment(db.Model):
 	disabled = db.Column(db.Boolean)
 	author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 	post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+
+	#----------------api----------------
+
+	def to_json(self):
+		json_comment = {
+			'url': url_for('api.get_comment', id=self.id),
+			'post_url': url_for('api.get_post', id=self.post_id),
+			'body': self.body,
+			'body_html': self.body_html,
+			'timestamp': self.timestamp,
+			'author_url': url_for('api.get_user', id=self.author_id),
+		}
+		return json_comment
+
+	@staticmethod
+	def from_json(json_comment):
+		body = json_comment.get('body')
+		if body is None or body == '':
+			raise ValidationError('comment does not have a body')
+		return Comment(body=body)
+
+	#--------------endapi----------------
+
 
 	@staticmethod
 	def on_changed_body(target, value, oldvalue, initiator):
